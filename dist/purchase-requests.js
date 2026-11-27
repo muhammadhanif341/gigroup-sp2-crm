@@ -19,7 +19,7 @@ async function loadPurchases() {
 function newPurchase() {
   const form=$('purchase-form');
   form.reset();
-  delete form.elements.item.dataset.itemCode;
+  delete form.elements.namedItem('item').dataset.itemCode;
   form.dataset.id=crypto.randomUUID();
   $('purchase-error').textContent='';
   $('purchase-items').innerHTML=db.items.map(i=>`<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
@@ -32,7 +32,7 @@ function showPurchaseDescription(field) {
   field.value = item.name || item.id;
   field.form.elements.uom.value = item.uom;
 }
-const purchaseItemField = $('purchase-form').elements.item;
+const purchaseItemField = $('purchase-form').elements.namedItem('item');
 purchaseItemField.oninput = event => {
   delete purchaseItemField.dataset.itemCode;
   if (!event.inputType || event.inputType === 'insertReplacementText') {
@@ -49,7 +49,7 @@ $('purchase-form').onsubmit=async event=>{
   button.disabled=true;
   try {
     const body=Object.fromEntries(new FormData(form));
-    body.item=form.elements.item.dataset.itemCode || body.item;
+    body.item=form.elements.namedItem('item').dataset.itemCode || body.item;
     body.id=form.dataset.id; body.qty=Number(body.qty);
     await crmRequest('purchase-requests',{method:'POST',body:JSON.stringify(body)});
     $('purchase-dialog').close();
