@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const path='dist/index.html';
+let html=fs.readFileSync(path,'utf8');
+const original="status:(d.status||'').trim()";
+const corrected="status:((d.status||'').trim()||(formType==='out'?'Pending':''))";
+if (!html.includes(original) && !html.includes(corrected)) throw Error('Stock Out save status mapping missing');
+html=html.split(original).join(corrected);
+assert(html.includes(corrected));
+const statusFor=(status,type)=>((status||'').trim()||(type==='out'?'Pending':''));
+assert.equal(statusFor('','out'),'Pending');
+assert.equal(statusFor('  ','out'),'Pending');
+assert.equal(statusFor('Issued','out'),'Issued');
+assert.equal(statusFor('','in'),'');
+fs.writeFileSync(path,html);
+console.log('PASS: Stock Out blank status defaults to Pending in saved records.');

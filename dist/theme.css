@@ -1,0 +1,26 @@
+button.theme-switch{display:inline-grid;place-items:center;flex:none;width:40px;height:40px;padding:0;border-radius:50%;border:1px solid var(--line);color:var(--accent);background:var(--panel);cursor:pointer}
+button.theme-switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#gate-theme{display:none}
+.crmblocked #gate-theme{display:block;position:fixed;top:max(12px,env(safe-area-inset-top));right:14px;z-index:2147483646;}
+@media print{#gate-theme,.theme-switch{display:none!important}}
+@media screen {
+:root[data-theme=light]{color-scheme:light;--bg:#f5f6f8;--side:#fff;--panel:#fff;--deep:#f7f8fa;--line:#d4dae0;--muted:#525e6a;--text:#202931;--accent:#a54812}
+html[data-theme=light]{
+ button.primary,button.primary:hover{background:#a54812;color:white;border-color:#a54812}
+ button:hover,tbody tr:hover,nav button:hover{background:#edf0f3;color:var(--text)}
+ nav button,nav button i,.mobilemenu,td,th,.formfield label,.cloudcard p,.sap-dept>div,.bottom,.formintro,.importhelp,.installsteps,.installnote,#backupsummary,#cancelpreview{color:var(--muted)!important}
+ nav button.active,nav button.active i{background:#fff0e3;color:#823707!important;border-color:#eccbad}
+ input,select,textarea,.prefixinput,dialog{border-color:var(--line)}
+ .formfield input[readonly]{background:#edf0f2;color:#424e59}
+ .prefixinput>span,.lowstock-notice,.pill.low,.tag.warn{background:#fff1df;color:#774410;border-color:#e9cda8}
+ .lowstock-notice button,.lowstock-notice small,.sap-view,.itemrecord-link{color:#834011}
+ .banner,#cloudstatus,.tag,.pill,.importsummary,.toast{color:#24583c;background:#e6f4ec}
+ #cloudmessage,#error,#cancelerror,#importerrors,#moveerrors,#sapcompletionerrors,.danger{color:#972f24!important}
+ :is(#table,#itemrecordtable) td[data-field=code] strong{color:var(--text)}
+ #table tbody tr,#itemrecordtable tbody tr{color:var(--text)}
+ .stat-icon,.stat:nth-child(n) .stat-icon{background:#f7e8da;color:#894117}
+ .panel,.stat,.member,.cloudcard,.applicant-card,.itemrecord-stats>div,dialog .actions,button:not(.primary):not(.danger){background-color:var(--panel)}
+ #itemrecorddialog .itemrecord-header{background:var(--panel);color:var(--text)}
+ .toolsmenu,.cloudcard{box-shadow:0 10px 36px #28344122}
+}
+}

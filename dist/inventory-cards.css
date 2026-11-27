@@ -1,0 +1,106 @@
+/* Inventory cards retain the existing palette and printable table. */
+@media screen {
+ #records.inventorytable #table{overflow:visible;min-width:0;width:100%}
+ #records.inventorytable #table table{display:block;width:100%;min-width:0;white-space:normal}
+ #records.inventorytable #table thead{display:none}
+ #records.inventorytable #table tbody{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:18px;width:100%;box-sizing:border-box}
+ #records.inventorytable #table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr auto auto;gap:12px 10px;align-content:start;min-width:0;padding:18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.065),transparent 42%),var(--deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 5px 14px rgba(0,0,0,.13)}
+ #records.inventorytable #table tbody tr:hover{background:linear-gradient(145deg,rgba(255,255,255,.085),transparent 45%),var(--deep)}
+ #records.inventorytable #table tbody td{display:block;min-width:0!important;max-width:100%;padding:0!important;border:0;text-align:left;white-space:normal!important;overflow-wrap:anywhere;line-height:1.55;font-size:12px}
+ #records.inventorytable #table tbody td::before{content:attr(data-label);display:block;color:var(--muted);font-size:9px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+ #records.inventorytable #table tbody td:nth-child(1){grid-column:2;grid-row:1;color:var(--muted);font-size:10px;text-align:right;align-self:center}
+ #records.inventorytable #table tbody td:nth-child(1)::before{display:none}
+ #records.inventorytable #table tbody td:nth-child(2){grid-column:1;grid-row:1;align-self:center}
+ #records.inventorytable #table tbody td:nth-child(2)::before{display:none}
+ #records.inventorytable #table .itemrecord-link{white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal;text-decoration:none!important;font-size:13px;font-weight:700;min-height:28px;max-width:100%}
+ #records.inventorytable #table tbody td:nth-child(3){grid-column:1/-1;grid-row:2;min-height:62px;padding:0 0 14px!important;margin:0;border-bottom:1px solid var(--line)}
+ #records.inventorytable #table tbody td:nth-child(3)::before{display:none}
+ #records.inventorytable #table tbody td:nth-child(3) strong{font-size:13px;font-weight:500;line-height:1.65;color:var(--text)}
+ #records.inventorytable #table tbody td:nth-child(4){grid-column:1;grid-row:3}
+ #records.inventorytable #table tbody td:nth-child(4)::before{content:'Physical stock'}
+ #records.inventorytable #table tbody td:nth-child(4) strong{font-size:25px;font-weight:650;letter-spacing:-.5px;font-variant-numeric:tabular-nums;color:var(--text)}
+ #records.inventorytable #table tbody td:nth-child(5){grid-column:2;grid-row:3;align-self:center;text-align:right;color:var(--muted)}
+ #records.inventorytable #table tbody td:nth-child(6){grid-column:1/-1;grid-row:4;min-height:36px;padding-top:10px!important;border-top:1px solid var(--line)}
+}
+@media screen and (min-width:651px) and (max-width:1100px){#records.inventorytable #table tbody{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media screen and (max-width:650px){#records.inventorytable #table tbody{grid-template-columns:minmax(0,1fr);padding:12px;gap:12px}#records.inventorytable #table tbody tr{padding:17px}#records.inventorytable #table tbody td:nth-child(3){min-height:0}#records.inventorytable #table .itemrecord-link{font-size:14px}}
+
+#stockoutapplicantview[hidden]{display:none}
+.applicant-viewbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px;border-bottom:1px solid var(--line)}
+.applicant-viewbar small{display:block;color:var(--muted);font-size:11px;margin-top:6px}
+.applicant-viewbuttons{display:flex;gap:7px;flex-wrap:wrap}
+.applicant-viewbuttons button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+.applicant-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:18px}
+.applicant-card{min-width:0;display:flex;flex-direction:column;padding:18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.065),transparent 42%),var(--deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 5px 14px rgba(0,0,0,.13)}
+.applicant-card-label{color:var(--muted);font-size:9px;letter-spacing:1.2px}
+.applicant-card h3{font-size:15px;line-height:1.5;overflow-wrap:anywhere;margin:9px 0 16px;color:var(--text)}
+.applicant-total{display:flex;align-items:baseline;gap:9px;margin-top:auto;margin-bottom:18px}
+.applicant-total>strong{font-size:29px;font-variant-numeric:tabular-nums;color:var(--text)}
+.applicant-total>span{font-size:11px;color:var(--muted)}
+.applicant-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;border-top:1px solid var(--line);padding-top:14px}
+.applicant-counts>span{font-size:10px;color:var(--muted)}
+.applicant-counts strong{display:block;font-size:19px;margin-top:7px;font-variant-numeric:tabular-nums;color:var(--text)}
+.applicant-counts>span:first-child strong{color:var(--accent)}
+.applicant-extra,.applicant-latest{font-size:10px;color:var(--muted);line-height:1.6}
+.applicant-latest{margin:15px 0}
+.applicant-card>button{width:100%;text-align:left;color:var(--accent);min-height:42px}
+@media screen{#table.applicant-cards-active{display:none!important}}
+@media screen and (min-width:651px) and (max-width:1100px){.applicant-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media screen and (max-width:650px){.applicant-card-grid{grid-template-columns:minmax(0,1fr);padding:12px;gap:12px}.applicant-viewbar{flex-direction:column;align-items:flex-start;padding:15px}.applicant-viewbuttons button{font-size:11px}.applicant-card{padding:17px}}
+@media print{#stockoutapplicantview{display:none!important}}
+
+/* Shared glossy finish; retain each component's existing base color. */
+@media screen {
+ :is(.stat,.panel,.member,.cloudcard,.applicant-card,.itemrecord-stats>div,#sapcompletionmatches>div),
+ #records.inventorytable #table tbody tr {
+  background-image:linear-gradient(135deg,rgba(255,255,255,.105) 0%,rgba(255,255,255,.035) 28%,transparent 58%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 1px 0 0 rgba(255,255,255,.035),0 7px 20px rgba(0,0,0,.16)!important;
+ }
+}
+@media screen and (max-width:650px){
+ :is(#table,#itemrecordtable) tbody tr {
+  background-image:linear-gradient(135deg,rgba(255,255,255,.105),rgba(255,255,255,.035) 28%,transparent 58%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),inset 1px 0 0 rgba(255,255,255,.035),0 7px 20px rgba(0,0,0,.16)!important;
+ }
+}
+
+/* Glossy controls and a stronger, stationary highlight on hovered cards. */
+@media screen {
+ button:not(.navbackdrop):not(.itemrecord-link),.workspace-tools>summary {
+  background-image:linear-gradient(175deg,rgba(255,255,255,.19) 0%,rgba(255,255,255,.055) 46%,rgba(0,0,0,.045) 52%,transparent 100%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.23),inset 0 -1px 0 rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.14);
+  transition:box-shadow .18s ease,border-color .18s ease,background-color .18s ease;
+ }
+ button:not(.navbackdrop):not(.itemrecord-link):focus-visible,.workspace-tools>summary:focus-visible {
+  outline:2px solid var(--accent);outline-offset:3px;
+ }
+ button:not(.navbackdrop):not(.itemrecord-link):active:not(:disabled),.workspace-tools>summary:active {
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12);
+ }
+ button:disabled{cursor:not-allowed}
+ :is(.stat,.panel,.member,.cloudcard,.applicant-card,.itemrecord-stats>div,#sapcompletionmatches>div),#records.inventorytable #table tbody tr {
+  transition:box-shadow .22s ease,border-color .22s ease;
+ }
+}
+@media screen and (hover:hover) and (pointer:fine) {
+ button:not(.navbackdrop):not(.itemrecord-link):hover:not(:disabled),.workspace-tools>summary:hover {
+  background-image:linear-gradient(175deg,rgba(255,255,255,.3),rgba(255,255,255,.09) 46%,rgba(0,0,0,.025) 52%,transparent)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.36),inset 0 -1px 0 rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.22);
+ }
+ :is(.stat,.panel,.member,.cloudcard,.applicant-card,.itemrecord-stats>div,#sapcompletionmatches>div):hover,
+ #records.inventorytable #table tbody tr:hover {
+  background-image:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.075) 30%,transparent 62%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 1px 0 0 rgba(255,255,255,.09),0 9px 24px rgba(0,0,0,.23)!important;
+  border-color:#50565f;
+ }
+}
+@media screen and (hover:hover) and (pointer:fine) and (max-width:650px){
+ :is(#table,#itemrecordtable) tbody tr:hover{
+  background-image:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.075) 30%,transparent 62%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 9px 24px rgba(0,0,0,.23)!important;
+ }
+}
+@media (prefers-reduced-motion:reduce){button,.workspace-tools>summary,:is(.stat,.panel,.member,.cloudcard,.applicant-card,.itemrecord-stats>div,#sapcompletionmatches>div),#records.inventorytable #table tbody tr{transition:none!important}}
+
+/* Company logo in the header's existing top-right badge. */
+.headeruser .avatar{background:#fff url('/gigroup-logo.webp') center/contain no-repeat;border:1px solid var(--line);border-radius:9px;font-size:0;color:transparent;width:38px;height:38px;flex-shrink:0}
