@@ -18,6 +18,7 @@ async function loadPurchases(quiet=false) {
     const canReview = ['admin','manager'].includes(crmUser.role);
     list.innerHTML = requests.map(row => `<article class="member">
       <h3>PR-${esc(row.number)} · ${esc(row.status)}</h3>
+      ${row.production_line ? `<p>Production line: ${esc(row.production_line)}</p>` : ''}
       ${purchaseItemsTable(row)}
       <p>${esc(row.reason)}</p><small>Requested by ${esc(row.requester)} · ${esc(new Date(row.created_at).toLocaleDateString())}</small>
       <button type="button" data-print-pr="${esc(row.id)}">Print / Save PDF</button>
@@ -29,6 +30,12 @@ async function loadPurchases(quiet=false) {
 function newPurchase() {
   const form=$('purchase-form');
   form.reset();
+  const departments=db.departments || departmentMaster;
+  $('purchase-production-line').innerHTML='<option value="">Select production line (optional)</option>'+
+    departments.filter(group=>group.active!==false).map(group=>
+      `<optgroup label="${esc(group.description)}">${group.lines.map(line=>
+        `<option value="${esc(group.description+' — '+line)}">${esc(line)}</option>`).join('')}</optgroup>`
+    ).join('');
   $('purchase-lines').replaceChildren();
   resetPurchaseDraft();
   form.dataset.id=crypto.randomUUID();
@@ -125,7 +132,7 @@ $('purchase-form').onsubmit=async event=>{
     }
     if(!form.elements.reason.reportValidity()) return;
     const lines=entries.map(line=>({item:line.code || line.label,qty:line.qty,uom:line.uom}));
-    const body={id:form.dataset.id,reason:form.elements.reason.value,lines};
+    const body={id:form.dataset.id,reason:form.elements.reason.value,production_line:form.elements.production_line.value,lines};
     await crmRequest('purchase-requests',{method:'POST',body:JSON.stringify(body)});
     $('purchase-dialog').close();
     await loadPurchases();
@@ -154,6 +161,7 @@ function printPurchase(row) {
   const fields = [
     ['Request number', 'PR-' + row.number], ['Request date', date(row.created_at)],
     ['Applicant', row.requester], ['Status', row.status],
+    ...(row.production_line ? [['Production line', row.production_line]] : []),
     ['Reason for purchase', row.reason]
   ];
   if (row.reviewer) fields.push(['Reviewed by', row.reviewer], ['Review date', date(row.reviewed_at)]);

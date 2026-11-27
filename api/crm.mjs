@@ -46,7 +46,7 @@ export default async function handler(req,res) {
       const {revision,data}=rows[0];
       if(url.searchParams.get('revision')===String(revision)) return json(res,200,{revision,unchanged:true});
       const items=data.items.map(({id,name,uom})=>({id,name,uom}));
-      return json(res,200,{revision,data:{items,tx:[]}});
+      return json(res,200,{revision,data:{items,tx:[],departments:data.departments}});
     }
     if(action==='history-stock') {
       if(user.role!=='admin') error('Administrator access required.',403);
