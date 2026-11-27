@@ -91,3 +91,25 @@ SOFTWARE.
   #itemrecorddialog .itemrecord-stats small{font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){#itemrecorddialog[open]{animation:none}#itemrecorddialog::backdrop{backdrop-filter:none}}
+
+@media screen and (max-width: 650px) {
+  html:has(#purchase-dialog[open]) { overflow: hidden; }
+  #purchase-dialog {
+    overscroll-behavior: contain;
+    overflow-y: auto;
+    max-inline-size: calc(100% - 20px);
+  }
+  #purchase-form fieldset, #purchase-form label, #purchase-form input,
+  #purchase-form textarea, #purchase-form .pr-card > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  #purchase-form label { grid-template-columns: minmax(0, 1fr); }
+  #purchase-form input, #purchase-form textarea { font-size: 16px; }
+  #purchase-form [data-line-results] button, #purchase-form .pr-card span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-inline-size: 100%;
+  }
+  #purchase-form .actions { flex-wrap: wrap; }
+}
