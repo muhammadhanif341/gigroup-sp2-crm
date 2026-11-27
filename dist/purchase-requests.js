@@ -3,9 +3,9 @@ let purchasePrintRows = new Map();
 function purchaseItemsTable(row) {
   const rows=(row.lines || [row]).map(line=>{
     const master=db.items.find(item=>item.id===line.item);
-    return `<tr><td>${esc(master ? master.id+' — '+master.name : line.item)}</td><td>${esc(line.qty)}</td><td>${esc(line.uom)}</td></tr>`;
+    return `<tr><td>${esc(master ? master.id+' — '+master.name : line.item)}</td><td>${esc(line.qty)}</td><td>${esc(line.uom)}</td><td>${esc(line.production_line || row.production_line || '—')}</td></tr>`;
   });
-  return `<table><thead><tr><th>Item code / description</th><th>Quantity</th><th>Unit</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  return `<table><thead><tr><th>Item code / description</th><th>Quantity</th><th>Unit</th><th>Production line</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 async function loadPurchases(quiet=false) {
   const version = ++purchaseListVersion;
@@ -30,12 +30,6 @@ async function loadPurchases(quiet=false) {
 function newPurchase() {
   const form=$('purchase-form');
   form.reset();
-  const departments=db.departments || departmentMaster;
-  $('purchase-production-line').innerHTML='<option value="">Select production line (optional)</option>'+
-    departments.filter(group=>group.active!==false).map(group=>
-      `<optgroup label="${esc(group.description)}">${group.lines.map(line=>
-        `<option value="${esc(group.description+' — '+line)}">${esc(line)}</option>`).join('')}</optgroup>`
-    ).join('');
   $('purchase-lines').replaceChildren();
   resetPurchaseDraft();
   form.dataset.id=crypto.randomUUID();
@@ -54,7 +48,37 @@ function purchaseEditor(title, saved) {
   const editor=$('purchase-line-template').content.firstElementChild.cloneNode(true);
   const item=editor.querySelector('[name=item]');
   editor.querySelector('legend').textContent=title;
+  const production=editor.querySelector('[name=production_line]');
+  const results=editor.querySelector('[data-line-results]');
+  const choices=(db.departments || departmentMaster).filter(group=>group.active!==false)
+    .flatMap(group=>group.lines.map(line=>group.description+' — '+line));
+  function showMatches() {
+    const query=production.value.trim().toLowerCase();
+    production.setCustomValidity('');
+    results.replaceChildren();
+    if(!query || choices.includes(production.value)) return;
+    const matches=choices.filter(option=>option.toLowerCase().includes(query));
+    if(!matches.length) results.textContent='No matching production line.';
+    for(const option of matches) {
+      const pick=document.createElement('button');
+      pick.type='button';pick.textContent=option;
+      pick.onclick=()=>{production.value=option;production.setCustomValidity('');results.replaceChildren();production.focus()};
+      results.append(pick);
+    }
+  }
+  production.oninput=showMatches;
+  production.onkeydown=event=>{
+    if(event.key==='ArrowDown' && results.firstElementChild){event.preventDefault();results.firstElementChild.focus()}
+    if(event.key==='Escape' && results.childNodes.length){event.preventDefault();results.replaceChildren()}
+  };
+  production.onchange=()=>{
+    const query=production.value.trim().toLowerCase();
+    const exact=choices.find(option=>option.toLowerCase()===query);
+    if(exact) production.value=exact;
+    production.setCustomValidity(!query || exact ? '' : 'Select a matching production line.');
+  };
   if (saved) {
+    production.value=saved.production_line || '';
     item.value=saved.label;
     if(saved.code) item.dataset.itemCode=saved.code;
     editor.querySelector('[name=qty]').value=saved.qty;
@@ -68,12 +92,13 @@ function purchaseEditor(title, saved) {
   return editor;
 }
 function readPurchaseEditor(editor) {
+  editor.querySelector('[name=production_line]').onchange();
   for (const field of editor.querySelectorAll('input')) {
     if (field.type!=='number') field.value=field.value.trim();
     if (!field.reportValidity()) return null;
   }
   const item=editor.querySelector('[name=item]');
-  return {label:item.value,code:item.dataset.itemCode,qty:Number(editor.querySelector('[name=qty]').value),uom:editor.querySelector('[name=uom]').value};
+  return {label:item.value,code:item.dataset.itemCode,qty:Number(editor.querySelector('[name=qty]').value),uom:editor.querySelector('[name=uom]').value,production_line:editor.querySelector('[name=production_line]').value};
 }
 function resetPurchaseDraft() {
   const editor=purchaseEditor('Item details');
@@ -85,7 +110,7 @@ function purchaseCard(saved) {
   card.className='pr-card';
   card.purchaseLine=saved;
   const summary=()=>{
-    card.innerHTML=`<strong>${esc(saved.label)}</strong><span>${esc(saved.qty)} ${esc(saved.uom)}</span><button type="button" data-edit>Edit</button><button type="button" data-remove>Remove</button>`;
+    card.innerHTML=`<strong>${esc(saved.label)}</strong><span>${esc(saved.qty)} ${esc(saved.uom)}</span>${saved.production_line ? `<span>${esc(saved.production_line)}</span>` : ''}<button type="button" data-edit>Edit</button><button type="button" data-remove>Remove</button>`;
     card.querySelector('[data-remove]').onclick=()=>card.remove();
     card.querySelector('[data-edit]').onclick=()=>{
       const editor=purchaseEditor('Edit item',saved);
@@ -131,8 +156,8 @@ $('purchase-form').onsubmit=async event=>{
       entries.push(line);
     }
     if(!form.elements.reason.reportValidity()) return;
-    const lines=entries.map(line=>({item:line.code || line.label,qty:line.qty,uom:line.uom}));
-    const body={id:form.dataset.id,reason:form.elements.reason.value,production_line:form.elements.production_line.value,lines};
+    const lines=entries.map(line=>({item:line.code || line.label,qty:line.qty,uom:line.uom,production_line:line.production_line}));
+    const body={id:form.dataset.id,reason:form.elements.reason.value,lines};
     await crmRequest('purchase-requests',{method:'POST',body:JSON.stringify(body)});
     $('purchase-dialog').close();
     await loadPurchases();
