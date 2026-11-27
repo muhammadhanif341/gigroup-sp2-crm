@@ -25,7 +25,7 @@ vm.createContext(startup);
 vm.runInContext(script,startup,{timeout:3000});
 const sapScript=fs.readFileSync('dist/sap-completion.js','utf8');new Function(sapScript);vm.runInContext(sapScript,startup,{timeout:3000});
 const pwaScript=fs.readFileSync('dist/pwa.js','utf8');new Function(pwaScript);vm.runInContext(pwaScript,startup,{timeout:3000});
-assert.equal((nodes.get('nav').innerHTML.match(/<button/g)||[]).length,7,'Sidebar must initialize with seven sections');
+assert.equal((nodes.get('nav').innerHTML.match(/<button/g)||[]).length,8,'Sidebar must initialize with eight sections');
 assert.equal(typeof nodes.get('cancelentryform').onsubmit,'function','Cancellation handler must initialize');
 vm.runInContext("go('Stock In');go('Stock Out');go('Inventory')",startup,{timeout:3000});
 console.log('PASS: complete app startup, sidebar sections, cancellation handler and section navigation.');

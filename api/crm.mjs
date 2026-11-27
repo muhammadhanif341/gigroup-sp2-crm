@@ -1,3 +1,4 @@
+import { purchaseRequests } from '../lib/purchase-requests.mjs';
 import { timingSafeEqual } from 'node:crypto';
 import { backend, member, limit, requestHeaders } from '../lib/backend.mjs';
 import { previewHistoryStock, applyHistoryStock } from '../lib/history-stock.mjs';
@@ -37,6 +38,7 @@ export default async function handler(req,res) {
       } finally { await c.query('SELECT pg_advisory_unlock(712834202)').catch(()=>{}); c.release(); }
     }
     const user=await member(req,rt);
+    if(action==='purchase-requests') return json(res,200,await purchaseRequests(pool,user,req.method,body));
     if(action==='me' && req.method==='GET') return json(res,200,{user});
     if(action==='history-stock') {
       if(user.role!=='admin') error('Administrator access required.',403);
