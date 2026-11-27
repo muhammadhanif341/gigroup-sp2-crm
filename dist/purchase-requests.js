@@ -30,7 +30,7 @@ function newPurchase() {
   const form=$('purchase-form');
   form.reset();
   $('purchase-lines').replaceChildren();
-  addPurchaseLine();
+  resetPurchaseDraft();
   form.dataset.id=crypto.randomUUID();
   $('purchase-error').textContent='';
   $('purchase-items').innerHTML=db.items.map(i=>`<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
@@ -43,37 +43,88 @@ function showPurchaseDescription(field) {
   field.value = item.name || item.id;
   field.closest('fieldset').querySelector('[name=uom]').value = item.uom;
 }
-function numberPurchaseLines() {
-  const lines=$('purchase-lines').children;
-  Array.from(lines).forEach((line,index)=>{
-    line.querySelector('legend').textContent='Item '+(index+1);
-    line.querySelector('[data-remove-line]').hidden=lines.length===1;
-  });
-}
-function addPurchaseLine() {
-  const line=$('purchase-line-template').content.firstElementChild.cloneNode(true);
-  const field=line.querySelector('[name=item]');
-  field.oninput=event=>{
-    delete field.dataset.itemCode;
-    if (!event.inputType || event.inputType==='insertReplacementText') showPurchaseDescription(field);
+function purchaseEditor(title, saved) {
+  const editor=$('purchase-line-template').content.firstElementChild.cloneNode(true);
+  const item=editor.querySelector('[name=item]');
+  editor.querySelector('legend').textContent=title;
+  if (saved) {
+    item.value=saved.label;
+    if(saved.code) item.dataset.itemCode=saved.code;
+    editor.querySelector('[name=qty]').value=saved.qty;
+    editor.querySelector('[name=uom]').value=saved.uom;
+  }
+  item.oninput=event=>{
+    delete item.dataset.itemCode;
+    if (!event.inputType || event.inputType==='insertReplacementText') showPurchaseDescription(item);
   };
-  field.onchange=()=>{if(!field.dataset.itemCode) showPurchaseDescription(field)};
-  line.querySelector('[data-remove-line]').onclick=()=>{line.remove();numberPurchaseLines()};
-  $('purchase-lines').append(line);
-  numberPurchaseLines();
-  field.focus();
+  item.onchange=()=>{if(!item.dataset.itemCode) showPurchaseDescription(item)};
+  return editor;
 }
-$('purchase-add-line').onclick=addPurchaseLine;
+function readPurchaseEditor(editor) {
+  for (const field of editor.querySelectorAll('input')) {
+    if (field.type!=='number') field.value=field.value.trim();
+    if (!field.reportValidity()) return null;
+  }
+  const item=editor.querySelector('[name=item]');
+  return {label:item.value,code:item.dataset.itemCode,qty:Number(editor.querySelector('[name=qty]').value),uom:editor.querySelector('[name=uom]').value};
+}
+function resetPurchaseDraft() {
+  const editor=purchaseEditor('Item details');
+  $('purchase-draft').replaceChildren(editor);
+  editor.querySelector('input').focus();
+}
+function purchaseCard(saved) {
+  const card=document.createElement('div');
+  card.className='pr-card';
+  card.purchaseLine=saved;
+  const summary=()=>{
+    card.innerHTML=`<strong>${esc(saved.label)}</strong><span>${esc(saved.qty)} ${esc(saved.uom)}</span><button type="button" data-edit>Edit</button><button type="button" data-remove>Remove</button>`;
+    card.querySelector('[data-remove]').onclick=()=>card.remove();
+    card.querySelector('[data-edit]').onclick=()=>{
+      const editor=purchaseEditor('Edit item',saved);
+      card.replaceChildren(editor);
+      const save=document.createElement('button'), cancel=document.createElement('button');
+      save.type=cancel.type='button';
+      save.textContent='Save changes';cancel.textContent='Cancel edit';
+      save.onclick=()=>{
+        const revised=readPurchaseEditor(editor);
+        if(revised) card.replaceWith(purchaseCard(revised));
+      };
+      cancel.onclick=summary;
+      card.append(save,cancel);
+      editor.querySelector('input').focus();
+    };
+  };
+  summary();
+  return card;
+}
+$('purchase-add-line').onclick=()=>{
+  const line=readPurchaseEditor($('purchase-draft').firstElementChild);
+  if(!line) return;
+  $('purchase-lines').append(purchaseCard(line));
+  resetPurchaseDraft();
+};
 $('purchase-form').onsubmit=async event=>{
   event.preventDefault();
   const form=event.target, button=form.querySelector('[type=submit]');
   if(button.disabled) return;
   button.disabled=true;
   try {
-    const lines=Array.from($('purchase-lines').children,line=>{
-      const item=line.querySelector('[name=item]');
-      return {item:item.dataset.itemCode || item.value,qty:Number(line.querySelector('[name=qty]').value),uom:line.querySelector('[name=uom]').value};
-    });
+    const entries=[];
+    for(const card of $('purchase-lines').children) {
+      const editor=card.querySelector('fieldset');
+      const line=editor ? readPurchaseEditor(editor) : card.purchaseLine;
+      if(!line) return;
+      entries.push(line);
+    }
+    const draft=$('purchase-draft').firstElementChild;
+    if (!entries.length || Array.from(draft.querySelectorAll('input')).some(field=>field.value || field.validity.badInput)) {
+      const line=readPurchaseEditor(draft);
+      if(!line) return;
+      entries.push(line);
+    }
+    if(!form.elements.reason.reportValidity()) return;
+    const lines=entries.map(line=>({item:line.code || line.label,qty:line.qty,uom:line.uom}));
     const body={id:form.dataset.id,reason:form.elements.reason.value,lines};
     await crmRequest('purchase-requests',{method:'POST',body:JSON.stringify(body)});
     $('purchase-dialog').close();
