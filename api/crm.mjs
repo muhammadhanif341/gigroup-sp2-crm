@@ -40,6 +40,14 @@ export default async function handler(req,res) {
     const user=await member(req,rt);
     if(action==='purchase-requests') return json(res,200,await purchaseRequests(pool,user,req.method,body));
     if(action==='me' && req.method==='GET') return json(res,200,{user});
+    if(user.role==='applicant') {
+      if(action!=='state' || req.method!=='GET') error('Applicant access is limited to purchase requests.',403);
+      const {rows}=await pool.query('SELECT revision,data FROM crm_state WHERE id=1');
+      const {revision,data}=rows[0];
+      if(url.searchParams.get('revision')===String(revision)) return json(res,200,{revision,unchanged:true});
+      const items=data.items.map(({id,name,uom})=>({id,name,uom}));
+      return json(res,200,{revision,data:{items,tx:[]}});
+    }
     if(action==='history-stock') {
       if(user.role!=='admin') error('Administrator access required.',403);
       if(req.method==='GET') {
@@ -70,7 +78,7 @@ export default async function handler(req,res) {
       }
       if(req.method==='POST') {
         await limit(pool,'member:'+user.id,8);
-        if(!['manager','storekeeper'].includes(body.role)) error('Select Manager or Storekeeper.');
+        if(!['manager','storekeeper','applicant'].includes(body.role)) error('Select a valid employee role.');
         const result=await auth.api.signUpEmail({body:{name:body.name,email:body.email,password:body.password}});
         const added=result.user || result.data?.user;
         if(!added?.id) error('Account could not be created. The email may already exist.',422);

@@ -62,7 +62,7 @@ async function crmStart(){
       return;
     }
     let me;try{me=await crmRequest('me')}catch(e){if(e.status===401){crmShowLogin();return}throw e}
-    crmUser=me.user;document.getElementById('clouduser').textContent=crmUser.name+' · '+crmUser.role;
+    crmUser=me.user;if(crmUser.role==='applicant')page='Purchase Requests';document.getElementById('clouduser').textContent=crmUser.name+' · '+crmUser.role;
     const result=await crmRequest('state');db=result.data;crmRevision=result.revision;crmConfirmed=structuredClone(db);crmReady=true;
     if(!db.items.length&&!db.tx.length&&(crmLegacy.items.length||crmLegacy.tx.length)&&crmUser.role==='admin'){
       crmPanel('Transfer your existing records',`<p>This browser has <strong>${crmLegacy.items.length} inventory items</strong> and <strong>${crmLegacy.tx.length} stock entries</strong>. The company database is empty.</p><p>Transfer these records once so your other devices can use them. Physical quantities and history stay the same.</p><button id="cloudtransfer" class="primary">Transfer to company database</button><button id="cloudempty" style="margin-top:12px">Start with empty company records</button>`);
@@ -89,13 +89,14 @@ async function crmRenderTeam(){
   }catch(e){panel.textContent=e.message}
 }
 function crmAddMember(){
-  const dialog=document.getElementById('cloudmemberdialog');dialog.innerHTML='<form id="cloudmemberform"><h2>Add employee</h2><label>Name</label><input name="name" required maxlength="100"><label>Email</label><input name="email" type="email" required><label>Password (at least 8 characters)</label><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password"><label>Role</label><select name="role"><option value="storekeeper">Storekeeper — new movements, view stock</option><option value="manager">Manager — inventory, edit, SAP completion</option></select><p id="cloudmembererror" role="alert"></p><div class="actions"><button type="button" onclick="this.closest(\'dialog\').close()">Cancel</button><button class="primary">Create account</button></div></form>';
+  const dialog=document.getElementById('cloudmemberdialog');dialog.innerHTML='<form id="cloudmemberform"><h2>Add employee</h2><label>Name</label><input name="name" required maxlength="100"><label>Email</label><input name="email" type="email" required><label>Password (at least 8 characters)</label><input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password"><label>Role</label><select name="role"><option value="applicant">Applicant — submit and track own purchase requests</option><option value="storekeeper">Storekeeper — new movements, view stock</option><option value="manager">Manager — inventory, edit, SAP completion</option></select><p id="cloudmembererror" role="alert"></p><div class="actions"><button type="button" onclick="this.closest(\'dialog\').close()">Cancel</button><button class="primary">Create account</button></div></form>';
   document.getElementById('cloudmemberform').onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector('.primary');b.disabled=true;try{await crmRequest('members',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});e.target.reset();dialog.close();await crmRenderTeam();toast('Employee account created.')}catch(err){document.getElementById('cloudmembererror').textContent=err.message}finally{b.disabled=false}};dialog.showModal();
 }
 async function crmToggleMember(button){button.disabled=true;try{await crmRequest('members',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,active:button.dataset.active==='true'})});await crmRenderTeam()}catch(e){toast(e.message);button.disabled=false}}
 window.crmRenderTeam=crmRenderTeam;
 setInterval(async()=>{
   if(!crmReady||crmBusy||document.hidden||document.querySelector('dialog[open]'))return;
+  if(page==='Purchase Requests') loadPurchases(true);
   const requestedRevision=crmRevision;try{const r=await crmRequest('state&revision='+requestedRevision);if(!crmBusy&&crmReady&&crmRevision===requestedRevision&&!r.unchanged&&r.revision>crmRevision){db=r.data;crmRevision=r.revision;crmConfirmed=structuredClone(db);render();crmStatus('Updated from company database')}}catch(e){crmStatus('Connection interrupted · Saved records remain on server');if(e.status===401){crmReady=false;db={items:[],tx:[]};render();crmShowLogin()}}
 },15000);
 window.addEventListener('online',()=>{if(crmReady)crmReload()});
